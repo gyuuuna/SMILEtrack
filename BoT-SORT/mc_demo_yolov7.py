@@ -36,9 +36,9 @@ def write_results(filename, results):
     print('save results to {}'.format(filename))
 
 
-def detect(save_img=False):
+def detect(save_img=True):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, opt.trace
-    save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
+    #save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://', 'https://'))
 
@@ -88,12 +88,18 @@ def detect(save_img=False):
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
+    
+    f_results = []
+    frame_num = 0
+    
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
+        
+        frame_num += 1
 
         # Inference
         t1 = time_synchronized()
@@ -109,8 +115,8 @@ def detect(save_img=False):
 
         # Process detections
         results = []
-
         for i, det in enumerate(pred):  # detections per image
+            
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
             else:
@@ -144,6 +150,18 @@ def detect(save_img=False):
                     # save results
                     results.append(
                         f"{i + 1},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
+                    )
+                    
+                    f_results.append(
+                        {
+                          "frame-id": frame_num,
+                          "target-id": tid,
+                          "x": tlwh[0],
+                          "y": tlwh[1],
+                          "w": tlwh[2],
+                          "h": tlwh[3],
+                          "label": names[int(tcls)]
+                        }
                     )
 
                     if save_img or view_img:  # Add bbox to image
@@ -181,6 +199,10 @@ def detect(save_img=False):
                             save_path += '.mp4'
                         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer.write(im0)
+
+    with open(str(save_dir)+'/labels/results.txt', 'w') as f:
+        for result in f_results:
+            f.write(str(result)+'\n')
 
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''

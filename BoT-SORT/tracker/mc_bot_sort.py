@@ -8,8 +8,7 @@ from tracker.gmc import GMC
 from tracker.basetrack import BaseTrack, TrackState
 from tracker.kalman_filter import KalmanFilter
 
-from fast_reid.fast_reid_interfece import FastReIDInterface
-
+# from fast_reid.fast_reid_interfece import FastReIDInterface
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
@@ -248,8 +247,8 @@ class BoTSORT(object):
         self.proximity_thresh = args.proximity_thresh
         self.appearance_thresh = args.appearance_thresh
 
-        if args.with_reid:
-            self.encoder = FastReIDInterface(args.fast_reid_config, args.fast_reid_weights, args.device)
+        #if args.with_reid:
+        #    self.encoder = FastReIDInterface(args.fast_reid_config, args.fast_reid_weights, args.device)
 
         self.gmc = GMC(method=args.cmc_method, verbose=[args.name, args.ablation])
 
