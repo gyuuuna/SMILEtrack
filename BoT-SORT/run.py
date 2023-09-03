@@ -32,8 +32,7 @@ data_dir = '/content/drive/MyDrive'
 def init():
     #file_id = "1KyRJNgfApv3m7cHdW7Ekt87pxrs_3ozu"
     #gdown.download(f'https://drive.google.com/uc?id={file_id}', "./prbnet.pt", quiet=False)
-    print('Start downloading yolov7 pretrained weights.')
-    
+        
     url = f"https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt"
     response = requests.get(url)
     if response.status_code == 200:
@@ -77,11 +76,6 @@ def detect(source):
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://', 'https://'))
-    
-    
-    ######################33
-    save_img = False
-    view_img = False
 
     # Directories
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
@@ -193,10 +187,10 @@ def detect(source):
                         {
                           "frame-id": frame_num,
                           "target-id": tid,
-                          "x": tlwh[0],
-                          "y": tlwh[1],
-                          "w": tlwh[2],
-                          "h": tlwh[3],
+                          "x": round(tlwh[0], 2),
+                          "y": round(tlwh[1], 2),
+                          "w": round(tlwh[2], 2),
+                          "h": round(tlwh[3], 2),
                           "label": names[int(tcls)]
                         }
                     )
@@ -291,35 +285,25 @@ if __name__ == '__main__':
     opt.ablation = False
     
     load_sample_videos()
-
+    
+    def execute(update=False):
+        for i in range(0, len(sample_video_data)):
+            video_file_path, desc = get_sample_video(i)
+            mot_result = detect(video_file_path)
+            
+            if update():
+                strip_optimizer(opt.weights)
+            
+            print('-------------')
+            print(video_file_path)
+            print(desc)
+            print()
+            print(mot_result)
+            print('-------------')
 
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov7.pt']:
-                
-                for i in range(0, 3):
-                    video_file_path, desc = get_sample_video(i)
-                    timeframes, timely_descs = extract_timeframes(desc)
-                    mot_result = detect(video_file_path)
-                    strip_optimizer(opt.weights)
-                    
-                    print('-------------')
-                    print(video_file_path)
-                    print(desc)
-                    print()
-                    print(mot_result)
-                    print('-------------')
-
+                execute(update=True)
         else:
-            for i in range(0, 3):
-                video_file_path, desc = get_sample_video(i)
-                timeframes, timely_descs = extract_timeframes(desc)
-                mot_result = detect(video_file_path)
-                
-                print('-------------')
-                print(video_file_path)
-                print(desc)
-                print()
-                print(mot_result)
-                print('-------------')
-
+            execute()
