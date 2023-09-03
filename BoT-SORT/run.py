@@ -19,6 +19,9 @@ sys.path.insert(0, './yolov7/')
 sys.path.append('.')
 
 sample_video_data = None
+#base_dir = ''
+data_dir = '/content/drive/MyDrive'
+
 
 def init():
     #file_id = "1KyRJNgfApv3m7cHdW7Ekt87pxrs_3ozu"
@@ -37,7 +40,7 @@ def init():
     
 
 def load_sample_videos():
-    json_file_path = './data/sample/sample-captions.json'
+    json_file_path = data_dir+'/data/sample/sample-captions.json'
     with open(json_file_path, "r", encoding="utf-8") as json_file:
         json_data = json.load(json_file)
         
@@ -49,7 +52,7 @@ def get_sample_video(index):
     sample = sample_video_data[index]
     
     video_id = sample['video_id']
-    video_file_path = f'./data/sample/{video_id}.mov'
+    video_file_path = f'{data_dir}/data/sample/{video_id}.mov'
     desc = sample['desc']
     return video_file_path, desc
     
